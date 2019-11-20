@@ -33,7 +33,7 @@ Window {
     property alias  isRun:      _runButton.checked
 
 
-    onOffSetChanged: {diferentRPM = offSet; controller.leftRPM = offSet}
+    //onOffSetChanged: {diferentRPM = offSet }
 
 
     onIsRunChanged: {
@@ -46,6 +46,8 @@ Window {
         id: _comDialog
         // visible:true
         onRejected: Qt.quit()
+
+
         onAccepted: {
             root.visible = true
             controller.connectToPort(_comDialog.currentPort,_comDialog.currentBaudRate)
@@ -57,6 +59,10 @@ Window {
     Controller
     {
         id: controller
+        onIsRunChanged:
+        {
+            root.isRun = controller.isRun
+        }
     }
 
     Component.onCompleted:

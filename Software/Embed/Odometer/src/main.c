@@ -50,7 +50,7 @@ void LeftAngularRateSensorHandler(PinState pin_event);
 
 
 void StateMachine(State state, DataStruct *data);
-
+void uartWrite(uint8_t comand,DataStruct *data);
 
 
 
@@ -140,16 +140,9 @@ void StateMachine(State state, DataStruct *data)
 	{
 		curentState=state;
 
-		PacketHeader comandStatecanget =PacketHeader_default;
 
+		uartWrite(curentState ? 0x80 : 0x81, 0);
 
-		comandStatecanget.comand= curentState ? 0x80 : 0x81;
-		for(uint8_t i=0; i < 4; i++)
-		{
-
-			USART1->DR=  comandStatecanget.array[i];
-			for(int j=0; j<0xffff;j++) asm("nop");
-		}
 	}
 
 	if(state==StateRUN)
@@ -177,6 +170,8 @@ void StateMachine(State state, DataStruct *data)
 		LCD_WriteString("RD:     ");
 		LCD_SetCursor(1,11);
 		LCD_WriteInt(data->rightDyno);
+
+		uartWrite(8,data);
 	}
 	else
 	{
@@ -187,7 +182,29 @@ void StateMachine(State state, DataStruct *data)
 
 }
 
+void uartWrite(uint8_t comand,DataStruct *data)
+{
+	PacketHeader comandStatecanget = PacketHeader_default;
+	comandStatecanget.comand = comand;
 
+	for(uint8_t i=0; i < 4; i++)
+	{
+
+		USART1->DR=  comandStatecanget.array[i];
+		for(int j=0; j<0xffff;j++) asm("nop");
+	}
+
+	if(!(comand & 0x80))
+	{
+		for(uint8_t i=0; i < comand; i++)
+		{
+			USART1->DR=  *(((uint8_t*)data)+i);
+			for(int j=0; j<0xffff;j++) asm("nop");
+		}
+	}
+	data->leftRPM++;
+
+}
 
 
 

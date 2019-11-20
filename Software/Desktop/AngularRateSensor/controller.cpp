@@ -82,6 +82,45 @@ bool Controller::disconnectPort()
     return m_port->isOpen();
 }
 
+void Controller::commnadRyader(CommandObject data)
+{
+
+    qDebug() << "Comanda is:" <<hex<< data.comdan;
+
+    switch (data.comdan )
+    {
+        case STOP_CMD: setIsRun(false); break;
+        case RUN_CMD: setIsRun(true); break;
+
+        default:
+        {
+            if(isRun()) //если всё запущенно
+            {
+                OdometerData odometerData{};
+
+                odometerData.leftRPM = *(reinterpret_cast<int16_t*>( data.data.data()));
+                odometerData.rightRPM = *(reinterpret_cast<int16_t*>( data.data.data()+2));
+
+                odometerData.leftDyno = *(reinterpret_cast<int16_t*>( data.data.data()+4));
+                odometerData.rightDyno = *(reinterpret_cast<int16_t*>( data.data.data()+6));
+
+                dataHandler(odometerData);
+                qDebug()<< odometerData.leftRPM;
+            }
+        }
+    }
+}
+
+void Controller::dataHandler(const Controller::OdometerData &data)
+{
+    setLeftRPM(data.leftRPM);
+    setRightRPM(data.leftRPM);
+
+  //  setLeft(data.leftRPM);
+  //  setLeftRPM(data.leftRPM);
+}
+
+
 void Controller::setLeftRPM(int leftRPM)
 {
     if (m_leftRPM == leftRPM)
@@ -129,14 +168,11 @@ void Controller::setIsRun(bool isRun)
 void Controller::receivingData()
 {
     //qDebug()<<"Data is Read";
-
     if(m_commandProcessor.FindeComand(m_port->readAll()))
-        qDebug() << "Comanda is:" <<hex<< m_commandProcessor.GetLastComand().comdan;
+        commnadRyader(m_commandProcessor.GetLastComand());
 
-
-
-    setRightRPM(m_rightRPM+1);
 }
+
 
 
 

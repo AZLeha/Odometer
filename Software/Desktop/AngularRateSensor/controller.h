@@ -43,6 +43,17 @@ public:
 private:
     QSerialPort *m_port;
     CommandProcessor m_commandProcessor;
+    struct OdometerData{
+        int16_t leftRPM;
+        int16_t rightRPM;
+
+        int16_t leftDyno;
+        int16_t rightDyno;
+    };
+protected:
+    void commnadRyader(CommandObject data);
+    void dataHandler(const OdometerData &data);
+
 public slots:
     void setLeftRPM(int leftRPM);
     void setRightRPM(int rightRPM);
@@ -51,6 +62,7 @@ public slots:
 
 private slots:
     void receivingData();
+
 
 signals:
     void leftRPMChanged(int leftRPM);

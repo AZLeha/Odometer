@@ -34,12 +34,17 @@ bool CommandProcessor::FindeComand(const QByteArray &data)
             {
                 m_lastCommand.comdan =  m_aCommandReaderBuffer.dequeue();
 
-                if(0) //! \todo добавить проверку на размер блока данных
-                    m_stusFindeComand = isDataFinde;
-                else
+                if(m_lastCommand.comdan & 0x80) //еденичка в старшем разяде признак команды
                 {
                     m_stusFindeComand = isSplitterFinde;
                     return  true;
+                }
+
+                else
+                {
+                     m_stusFindeComand = isDataFinde;
+                     m_DataCounter = m_lastCommand.comdan;
+                     m_lastCommand.data.clear();
                 }
 
 
@@ -47,7 +52,13 @@ bool CommandProcessor::FindeComand(const QByteArray &data)
 
             case isDataFinde:
             {
-                m_stusFindeComand = isDataFinde;
+                if(m_DataCounter--)
+                    m_lastCommand.data.append(static_cast<char>(m_aCommandReaderBuffer.dequeue()));
+                else
+                {
+                    m_stusFindeComand = isSplitterFinde;
+                    return true;
+                }
             } break;
 
         }

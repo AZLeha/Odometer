@@ -23,7 +23,8 @@ public:
 private:
     QQueue<uint8_t> m_aCommandReaderBuffer;
     CommandObject m_lastCommand;
-    uint32_t m_Splitter;
+    uint32_t m_Splitter; //для промежуточного хранения разделителя
+    uint8_t m_DataCounter; //счётчик данных
 
     enum {
         isSplitterFinde,
