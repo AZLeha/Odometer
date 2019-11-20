@@ -1,0 +1,7 @@
+### QT ###
+build-AngularRateSensor*
+
+### Eclipse ###
+.metadata
+RemoteSystemsTempFiles/
+

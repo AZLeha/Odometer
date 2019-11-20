@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Tachometer.qml</file>
+        <file>ComDialog.qml</file>
+    </qresource>
+</RCC>
