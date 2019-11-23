@@ -3,6 +3,7 @@ import QtQuick.Controls 1.2
 import QtQuick.Dialogs 1.2
 
 import QtQml.Models 2.13
+import Qt.labs.settings 1.0
 
 Dialog {
     id: dateDialog
@@ -10,9 +11,16 @@ Dialog {
     title: "Choose a date"
     standardButtons: StandardButton.Ok | StandardButton.Close
 
-
+    Settings
+    {
+        id: setings
+        property int setingsBaudRate : 11
+        property string setingsFolderPath: shortcuts.home
+    }
     property string currentPort: _port.currentText
     property int currentBaudRate: _baudRate.currentText
+    property string folderPath: _FileDialog.folder
+
     property var listCom: "None"
 
     Column{
@@ -41,7 +49,8 @@ Dialog {
                 ComboBox {
                     id: _baudRate
                     model: [110, 300, 600, 1200, 2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
-                    currentIndex: 11
+                    currentIndex: setings.setingsBaudRate
+                    onCurrentIndexChanged: setings.setingsBaudRate = currentIndex
 
                 }
             }
@@ -53,7 +62,8 @@ Dialog {
             TextField {
                 id: textField
 
-                placeholderText: qsTr("file name")
+                //placeholderText: qsTr("file name")
+                text: setings.setingsFolderPath
             }
 
             Button {
@@ -68,11 +78,12 @@ Dialog {
     FileDialog {
         id: _FileDialog
         title: "Please choose a file"
-        folder: shortcuts.home
-
+        folder: setings.setingsFolderPath
+        selectFolder: true
+        onFolderChanged: setings.setingsFolderPath = folder
         onAccepted: {
-                textField.focus = true   ;
-            textField.text = _FileDialog.fileUrl
+            textField.focus = true;
+            textField.text = _FileDialog.folder
         }
     }
 

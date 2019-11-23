@@ -6,12 +6,13 @@
 
 #define  PacketHeader_default {.array={0xAA,0x3C,0x55,0}}
 typedef union {
-	uint32_t header;
+	uint8_t array[4];
+
 	struct {
 	    uint8_t separator[3];
 		uint8_t comand;
 	};
-	uint8_t array[4];
+
 }PacketHeader;
 
 
@@ -140,7 +141,6 @@ void StateMachine(State state, DataStruct *data)
 	{
 		curentState=state;
 
-
 		uartWrite(curentState ? 0x80 : 0x81, 0);
 
 	}
@@ -172,6 +172,7 @@ void StateMachine(State state, DataStruct *data)
 		LCD_WriteInt(data->rightDyno);
 
 		uartWrite(8,data);
+		for(int j=0; j<0xfffff;j++) asm("nop");
 	}
 	else
 	{
@@ -184,26 +185,25 @@ void StateMachine(State state, DataStruct *data)
 
 void uartWrite(uint8_t comand,DataStruct *data)
 {
-	PacketHeader comandStatecanget = PacketHeader_default;
+  	static PacketHeader comandStatecanget = PacketHeader_default;
 	comandStatecanget.comand = comand;
 
-	for(uint8_t i=0; i < 4; i++)
-	{
 
-		USART1->DR=  comandStatecanget.array[i];
-		for(int j=0; j<0xffff;j++) asm("nop");
+	for(int i = 0; i < 0xfffff; i++)
+	{
+		if(TransmitDataViaDMA(comandStatecanget.array, 4)) break;
 	}
 
 	if(!(comand & 0x80))
 	{
-		for(uint8_t i=0; i < comand; i++)
+		for(int i = 0; i < 0xfffff; i++)
 		{
-			USART1->DR=  *(((uint8_t*)data)+i);
-			for(int j=0; j<0xffff;j++) asm("nop");
+			if(TransmitDataViaDMA(data, 16)) break;
 		}
 	}
-	data->leftRPM++;
 
+
+	data->leftRPM++;
 }
 
 
@@ -226,7 +226,6 @@ void EXTI15_10_IRQHandler()
 	//right angular rate sensor
 	if(EXTI->PR & EXTI_PR_PR11)
 	{
-
 		EXTI->PR |= EXTI_PR_PR11;
 		RightAngularRateSensorHandler(GPIOA->IDR & EXTI_PR_PR11 ? PIN_UP : PIN_DOWEN);
 	}
@@ -253,10 +252,10 @@ void TIM2_IRQHandler(void)
 
 	//USART1->DR='t';
 	if(GPIOC->IDR & GPIO_IDR_IDR13)
-	GPIOC->BSRR=GPIO_BSRR_BR13;
-		//for (int i = 0; i < 0x9ffff; i++) asm("nop");
-	else GPIOC->BSRR=GPIO_BSRR_BS13;
-	//	for (int i = 0; i < 0x9ffff; i++) asm("nop");
+		GPIOC->BSRR=GPIO_BSRR_BR13;
+	else
+		GPIOC->BSRR=GPIO_BSRR_BS13;
+
 }
 
 

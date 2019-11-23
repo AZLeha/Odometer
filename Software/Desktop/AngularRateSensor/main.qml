@@ -3,6 +3,7 @@ import QtQuick.Window 2.13
 import QtQuick.Extras 1.4
 import QtQuick.Controls.Styles 1.4
 
+import QtQuick.Dialogs 1.3
 
 import custom.controller 1.0
 
@@ -50,11 +51,24 @@ Window {
 
         onAccepted: {
             root.visible = true
-            controller.connectToPort(_comDialog.currentPort,_comDialog.currentBaudRate)
+            if(!controller.connectToPort(_comDialog.currentPort,_comDialog.currentBaudRate, _comDialog.folderPath))
+            {
+                messageDialog.visible = true
+            }
             //! \todo дописать поключение порта
         }
     }
 
+    MessageDialog {
+        id: messageDialog
+        title: "Ошибка поключения"
+        text: "Проверити подключения порта"
+        icon: StandardIcon.Critical
+        onAccepted: {
+
+          Qt.quit()
+        }
+    }
 
     Controller
     {

@@ -5,6 +5,8 @@
 #include <QSerialPort>
 #include <QJsonArray>
 #include <commandprocessor.h>
+#include <QFile>
+#include <QTextStream>
 
 class Controller : public QObject
 {
@@ -36,13 +38,18 @@ public:
     Q_INVOKABLE QJsonArray getListPorts();
 
 
-    Q_INVOKABLE bool connectToPort(const QString &portName, const qint32 & baudRate);
+    Q_INVOKABLE bool connectToPort(const QString &portName, const qint32 & baudRate = 115200, const QString filePath = "./");
     bool disconnectPort();
 
 
 private:
     QSerialPort *m_port;
     CommandProcessor m_commandProcessor;
+
+    QFile m_file;
+    QTextStream m_stream;
+    QString m_folderPath;
+
     struct OdometerData{
         int16_t leftRPM;
         int16_t rightRPM;

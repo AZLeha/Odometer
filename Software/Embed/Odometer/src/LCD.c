@@ -81,21 +81,21 @@ static void LCDLolLVLInit()
 __attribute__((always_inline)) static inline void LCDSetRegister(uint8_t reg)
 {
 	if(reg == LCD_DR)
-		GPIOA->BSRR = GPIO_BSRR_BS0;
+		GPIOA->BSRR |= GPIO_BSRR_BS0;
 	else
-		GPIOA->BSRR = GPIO_BSRR_BR0;
+		GPIOA->BSRR |= GPIO_BSRR_BR0;
 }
 
 
 __attribute__((always_inline)) static inline void LCDWriteHalfWord(uint8_t word)
 {
-	GPIOA->BRR = GPIO_BRR_BR4|GPIO_BRR_BR5|GPIO_BRR_BR6|GPIO_BRR_BR7;
+	GPIOA->BRR |= GPIO_BRR_BR4|GPIO_BRR_BR5|GPIO_BRR_BR6|GPIO_BRR_BR7;
 
 	GPIOA->ODR |= word<<4;
 
-	GPIOA->BSRR = GPIO_BSRR_BS1;
+	GPIOA->BSRR |= GPIO_BSRR_BS1;
 	LCDdelay(1);
-	GPIOA->BSRR = GPIO_BSRR_BR1;
+	GPIOA->BSRR |= GPIO_BSRR_BR1;
 	LCDdelay(1);
 
 }

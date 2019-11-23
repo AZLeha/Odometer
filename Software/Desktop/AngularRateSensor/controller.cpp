@@ -1,6 +1,7 @@
 #include "controller.h"
 #include <QDebug>
 #include <QSerialPortInfo>
+#include <QDateTime>
 
 #define STOP_CMD 0x80
 #define RUN_CMD 0x81
@@ -19,7 +20,6 @@ Controller::Controller(QObject *parent) :
 
 Controller::~Controller()
 {
-
     delete  m_port;
 }
 
@@ -54,8 +54,9 @@ QJsonArray Controller::getListPorts()
     return listCom;
 }
 
-bool Controller::connectToPort(const QString &portName, const qint32 &baudRate)
+bool Controller::connectToPort(const QString &portName, const qint32 & baudRate, const QString filePath )
 {
+    m_folderPath = filePath;
 
     m_port->setPortName(portName);
     m_port->setBaudRate(baudRate);
@@ -73,19 +74,14 @@ bool Controller::connectToPort(const QString &portName, const qint32 &baudRate)
 
 bool Controller::disconnectPort()
 {
-    m_port->flush();
-    m_port->waitForReadyRead(100);
-    qDebug() << "Rx: " << m_port->readAll();
-
     if(m_port->isOpen()) m_port->close();
-
     return m_port->isOpen();
 }
 
 void Controller::commnadRyader(CommandObject data)
 {
 
-    qDebug() << "Comanda is:" <<hex<< data.comdan;
+
 
     switch (data.comdan )
     {
@@ -99,13 +95,13 @@ void Controller::commnadRyader(CommandObject data)
                 OdometerData odometerData{};
 
                 odometerData.leftRPM = *(reinterpret_cast<int16_t*>( data.data.data()));
-                odometerData.rightRPM = *(reinterpret_cast<int16_t*>( data.data.data()+2));
+                odometerData.rightRPM = *(reinterpret_cast<int16_t*>(data.data.data()+2));
 
                 odometerData.leftDyno = *(reinterpret_cast<int16_t*>( data.data.data()+4));
                 odometerData.rightDyno = *(reinterpret_cast<int16_t*>( data.data.data()+6));
 
                 dataHandler(odometerData);
-                qDebug()<< odometerData.leftRPM;
+
             }
         }
     }
@@ -114,8 +110,20 @@ void Controller::commnadRyader(CommandObject data)
 void Controller::dataHandler(const Controller::OdometerData &data)
 {
     setLeftRPM(data.leftRPM);
-    setRightRPM(data.leftRPM);
+    setRightRPM(data.rightRPM);
 
+    m_stream << QString::number(QDateTime::currentDateTime().time().hour()) +":" + \
+                QString::number(QDateTime::currentDateTime().time().minute()) + ":" + \
+                QString::number(QDateTime::currentDateTime().time().second()) + ":" + \
+                QString::number(QDateTime::currentDateTime().time().msec()) + "#" + \
+                QString::number(data.leftRPM) +"#" + \
+                QString::number(data.rightRPM) +"#" + \
+                QString::number(data.leftDyno) +"#" + \
+                QString::number(data.rightDyno) +"\n";
+
+
+
+    //! \todo СДЕЛАТЬ ЧТЕНИЕ С ДИНАМОМИТРА
   //  setLeft(data.leftRPM);
   //  setLeftRPM(data.leftRPM);
 }
@@ -157,8 +165,25 @@ void Controller::setIsRun(bool isRun)
     m_isRun = isRun;
     uint8_t data;
 
-    if (m_isRun) data = RUN_CMD;
-    else data = STOP_CMD;
+    if (m_isRun) {
+        data = RUN_CMD;
+        m_file.setFileName( m_folderPath.split("file:///").at(1)+"/log"+ \
+                            QString::number(QDateTime::currentDateTime().time().hour())+"_" + \
+                            QString::number(QDateTime::currentDateTime().time().minute())+"_" + \
+                            QString::number(QDateTime::currentDateTime().time().second()) + ".txt"
+                           );
+
+        m_file.open(QIODevice::WriteOnly);
+
+        m_stream.setDevice(&m_file);
+
+        m_stream << "hour:minute:second:msec#leftRPM#rightRPM#leftDyno#rightDyno \n";
+
+    }
+    else {
+        data = STOP_CMD;
+        m_file.close();
+    }
 
     m_port->write( reinterpret_cast<char*>(&data),1);
 
