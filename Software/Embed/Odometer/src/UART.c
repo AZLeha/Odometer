@@ -33,6 +33,7 @@ void UART_Init(void)
 	//4 channel
 	DMA1_Channel4->CPAR =(uint32_t)(&USART1->DR);
 	DMA1_Channel4->CCR = DMA_CCR4_PL | DMA_CCR4_MINC | DMA_CCR4_DIR | DMA_CCR4_TCIE;
+	NVIC_SetPriority(TIM2_IRQn,4);
 	NVIC_EnableIRQ (DMA1_Channel4_IRQn);
 
 }

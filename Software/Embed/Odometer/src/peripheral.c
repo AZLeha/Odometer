@@ -48,10 +48,11 @@ void InitTimer(void)
 
 
 	TIM2->PSC = (72000000 / 2) / 1000 - 1;
-	TIM2->ARR = 2000 - 1;
+	TIM2->ARR = 200 - 1;
 	TIM2->DIER |= TIM_DIER_UIE;
 	TIM2->CR1 = TIM_CR1_ARPE | TIM_CR1_CEN;
 
+	NVIC_SetPriority(TIM2_IRQn,5);
 	NVIC_EnableIRQ(TIM2_IRQn);
 }
 

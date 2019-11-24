@@ -39,15 +39,17 @@ typedef struct
 	int16_t rightDyno;
 } DataStruct;
 
-
 State GlobalState  = StateSTOP;
-DataStruct GlobalData={0};
+DataStruct GlobalData;
 
 //обработчик кноки
 void StartButtonHandler(PinState pin_event);
 //обработчики дачика оборотов
 void RightAngularRateSensorHandler(PinState pin_event);
 void LeftAngularRateSensorHandler(PinState pin_event);
+
+
+
 
 
 void StateMachine(State state, DataStruct *data);
@@ -75,8 +77,10 @@ int main(void)
 
 	/*DWT_CYCCNT  = 0;
 	uint32_t x = DWT_CYCCNT;*/
-
-
+	GlobalData.leftDyno = 0;
+	GlobalData.rightDyno = 0;
+	GlobalData.leftRPM = 0;
+	GlobalData.rightRPM = 10;
 
 	for(;;)
 	{
@@ -89,26 +93,33 @@ void StartButtonHandler(PinState pin_event)
 {
 	if(pin_event==PIN_UP)
 	{
-		//USART1->DR='1';
 		GlobalState = !GlobalState;
-
 	}
 	else
 	{
-		//USART1->DR='2';
+
 	}
 }
 
 
 void RightAngularRateSensorHandler(PinState pin_event)
 {
-	if(pin_event==PIN_UP)
+	static uint8_t count=0;
+	static uint32_t DWT_Count = 0;
+
+	count++;
+
+
+	if(count == 8)
 	{
-		USART1->DR='3';
-	}
-	else
-	{
-		USART1->DR='4';
+		uint32_t time = DWT_Count;
+
+		DWT_Count = DWT_CYCCNT;
+
+		time = DWT_Count - time;
+								//(time * 14 *60 )/f_clc
+		GlobalData.rightRPM = (time *840) / 72000000;
+		count = 0;
 	}
 
 }
@@ -116,15 +127,29 @@ void RightAngularRateSensorHandler(PinState pin_event)
 
 void LeftAngularRateSensorHandler(PinState pin_event)
 {
-	if(pin_event==PIN_UP)
+	static uint8_t count=0;
+	static uint32_t DWT_Count = 0;
+
+	count++;
+
+
+	if(count == 8)
 	{
-		USART1->DR='5';
-	}
-	else
-	{
-		USART1->DR='6';
+		uint32_t time = DWT_Count;
+
+		DWT_Count = DWT_CYCCNT;
+
+		time = DWT_Count - time;
+								//(time * 14 *60 )/f_clc
+		GlobalData.leftRPM = (time *840) / 72000000;
+		count = 0;
 	}
 }
+
+
+
+
+
 
 
 
@@ -134,14 +159,28 @@ void StateMachine(State state, DataStruct *data)
 
 	if(state==curentState)
 	{
-		//≈сли сто€ние SYOP и не мен€лось выходим так как перотрисовка не требуетс€
+		//≈сли сто€ние STOP и не мен€лось выходим так как перотрисовка не требуетс€
 		if(curentState==StateSTOP) return;
 	}
 	else
 	{
 		curentState=state;
 
-		uartWrite(curentState ? 0x80 : 0x81, 0);
+		if(curentState == StateSTOP)
+		{
+			GPIOC->BSRR=GPIO_BSRR_BR13;
+			TIM2->CR1 &= ~TIM_CR1_CEN;
+		}
+		else
+			GPIOC->BSRR=GPIO_BSRR_BS13;
+
+		//uartWrite(curentState ? 0x80 : 0x81, 0);
+
+		for(int j=0; j<0xfffff;j++) asm("nop");
+
+		if(curentState == StateRUN)  TIM2->CR1 |= TIM_CR1_CEN;
+
+
 
 	}
 
@@ -171,8 +210,9 @@ void StateMachine(State state, DataStruct *data)
 		LCD_SetCursor(1,11);
 		LCD_WriteInt(data->rightDyno);
 
-		uartWrite(8,data);
-		for(int j=0; j<0xfffff;j++) asm("nop");
+
+		for(int j=0; j<0xffff;j++) asm("nop");
+
 	}
 	else
 	{
@@ -203,7 +243,7 @@ void uartWrite(uint8_t comand,DataStruct *data)
 	}
 
 
-	data->leftRPM++;
+
 }
 
 
@@ -216,7 +256,6 @@ void USART1_IRQHandler(void)
 	if(USART1->DR == 0x80) GlobalState = StateSTOP;
 	if(USART1->DR == 0x81) GlobalState = StateRUN;
 }
-
 
 
 
@@ -250,12 +289,9 @@ void TIM2_IRQHandler(void)
 {
 	TIM2->SR &= ~TIM_SR_UIF; // сбрасываем прерывание
 
-	//USART1->DR='t';
-	if(GPIOC->IDR & GPIO_IDR_IDR13)
-		GPIOC->BSRR=GPIO_BSRR_BR13;
-	else
-		GPIOC->BSRR=GPIO_BSRR_BS13;
 
+	if(GlobalState == StateRUN)
+		uartWrite(8,&GlobalData);
 }
 
 

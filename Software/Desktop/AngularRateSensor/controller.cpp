@@ -16,6 +16,8 @@ Controller::Controller(QObject *parent) :
 {
     m_isRun = false;
     connect(m_port, &QSerialPort::readyRead, this , &Controller::receivingData);
+
+
 }
 
 Controller::~Controller()

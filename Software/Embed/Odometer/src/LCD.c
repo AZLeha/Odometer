@@ -20,6 +20,7 @@ static void LCDdelay(int delay);
 
 void LCD_Init()
 {
+	LCDdelay(150);
 	LCDLolLVLInit();
 
 	writeOneByteinLSD(LCD_IR,0x33);
