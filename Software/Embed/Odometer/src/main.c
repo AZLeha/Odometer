@@ -42,9 +42,9 @@ typedef struct
 State GlobalState  = StateSTOP;
 DataStruct GlobalData;
 
-//обработчик кноки
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 void StartButtonHandler(PinState pin_event);
-//обработчики дачика оборотов
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 void RightAngularRateSensorHandler(PinState pin_event);
 void LeftAngularRateSensorHandler(PinState pin_event);
 
@@ -110,7 +110,7 @@ void RightAngularRateSensorHandler(PinState pin_event)
 	count++;
 
 
-	if(count == 8)
+	if(count == 6)
 	{
 		uint32_t time = DWT_Count;
 
@@ -118,7 +118,11 @@ void RightAngularRateSensorHandler(PinState pin_event)
 
 		time = DWT_Count - time;
 								//(time * 14 *60 )/f_clc
-		GlobalData.rightRPM = (time *840) / 72000000;
+	   float x = time*14;
+			   x=x/72000000;
+			   x=60/x;
+
+		GlobalData.rightRPM = x;
 		count = 0;
 	}
 
@@ -140,9 +144,16 @@ void LeftAngularRateSensorHandler(PinState pin_event)
 		DWT_Count = DWT_CYCCNT;
 
 		time = DWT_Count - time;
-								//(time * 14 *60 )/f_clc
-		GlobalData.leftRPM = (time *840) / 72000000;
+
+		float x = time*14;
+					   x=x/72000000;
+					   x=60/x;
+
+		GlobalData.leftRPM = x;
 		count = 0;
+								//(time * 14 *60 )/f_clc
+		//GlobalData.leftRPM = (time *840) / 72000000;
+		//count = 0;
 	}
 }
 
@@ -159,7 +170,7 @@ void StateMachine(State state, DataStruct *data)
 
 	if(state==curentState)
 	{
-		//Если стояние STOP и не менялось выходим так как перотрисовка не требуется
+		//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ STOP пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if(curentState==StateSTOP) return;
 	}
 	else
@@ -287,7 +298,7 @@ void EXTI15_10_IRQHandler()
 
 void TIM2_IRQHandler(void)
 {
-	TIM2->SR &= ~TIM_SR_UIF; // сбрасываем прерывание
+	TIM2->SR &= ~TIM_SR_UIF; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 
 	if(GlobalState == StateRUN)

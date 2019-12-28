@@ -167,15 +167,16 @@ void Controller::setIsRun(bool isRun)
     m_isRun = isRun;
     uint8_t data;
 
+
     if (m_isRun) {
         data = RUN_CMD;
-        m_file.setFileName( m_folderPath.split("file:///").at(1)+"/log"+ \
+        m_file.setFileName( m_folderPath.split("file://").at(1)+"/log"+ \
                             QString::number(QDateTime::currentDateTime().time().hour())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().minute())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().second()) + ".txt"
                            );
 
-        m_file.open(QIODevice::WriteOnly);
+        qDebug() << m_file.fileName()<< m_file.open(QIODevice::WriteOnly);
 
         m_stream.setDevice(&m_file);
 
