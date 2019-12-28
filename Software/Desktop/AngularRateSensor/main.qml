@@ -112,7 +112,8 @@ Window {
            anchors.bottom: _diferentTachometer.bottom
            anchors.right: _diferentTachometer.left
            anchors.rightMargin: 10
-
+           maximumValue: 1500
+           gaugeStepSize:100
         }
 
         Tachometer
@@ -125,7 +126,7 @@ Window {
             maximumValue: 100
             minimumValue: -100
             gaugeStepSize:10
-            value: diferentRPM
+            value: root.rightRPM - ((_dial.value*0.01)*root.leftRPM)
 
         }
 
@@ -139,6 +140,8 @@ Window {
             anchors.bottom: _diferentTachometer.bottom
             anchors.left: _diferentTachometer.right
             anchors.leftMargin: 10
+            maximumValue: 1500
+            gaugeStepSize:100
 
         }
 
@@ -278,9 +281,5 @@ Window {
             font.pixelSize: 12
         }
         //=============================================================================
-
-
    }
-
-
 }
