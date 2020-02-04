@@ -190,12 +190,13 @@ void Controller::setIsRun(bool isRun)
 
     m_port->write( reinterpret_cast<char*>(&data),1);
 
+    qDebug()<<"IS Run";
     emit isRunChanged(m_isRun);
 }
 
 void Controller::receivingData()
 {
-    //qDebug()<<"Data is Read";
+    qDebug()<<"Data is Read";
     if(m_commandProcessor.FindeComand(m_port->readAll()))
         commnadRyader(m_commandProcessor.GetLastComand());
 

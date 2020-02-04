@@ -2,7 +2,7 @@
 #include "LCD.h"
 #include "UART.h"
 #include "peripheral.h"
-
+#define COUNT_TO_TIMER
 
 #define  PacketHeader_default {.array={0xAA,0x3C,0x55,0}}
 typedef union {
@@ -39,8 +39,16 @@ typedef struct
 	int16_t rightDyno;
 } DataStruct;
 
+
+typedef struct
+{
+	int64_t leftRPM;
+	int64_t rightRPM;
+} RPM;
+
 State GlobalState  = StateSTOP;
 DataStruct GlobalData;
+RPM GlobalRateSensor;
 
 //���������� �����
 void StartButtonHandler(PinState pin_event);
@@ -67,11 +75,18 @@ int main(void)
 	GPIOC->CRH &= ~GPIO_CRH_CNF13;
 
 
+	GlobalRateSensor.leftRPM = 0 ;
+	GlobalRateSensor.rightRPM = 0 ;
 	LCD_Init();
 	UART_Init();
 	InitExternalInterrupt();
 	InitTimer();
+
+
+	#ifdef COUNT_TO_TIMER
+	#else
 	InitDWT();
+	#endif
 
 
 
@@ -104,13 +119,19 @@ void StartButtonHandler(PinState pin_event)
 
 void RightAngularRateSensorHandler(PinState pin_event)
 {
+#ifdef COUNT_TO_TIMER
+
+	NVIC_DisableIRQ(TIM2_IRQn);
+	GlobalRateSensor.rightRPM = GlobalRateSensor.rightRPM +1;
+	NVIC_EnableIRQ(TIM2_IRQn);
+#else
 	static uint8_t count=0;
 	static uint32_t DWT_Count = 0;
 
 	count++;
 
 
-	if(count == 6)
+	if(count == 8)
 	{
 		uint32_t time = DWT_Count;
 
@@ -125,12 +146,19 @@ void RightAngularRateSensorHandler(PinState pin_event)
 		GlobalData.rightRPM = x;
 		count = 0;
 	}
+#endif
 
 }
 
 
 void LeftAngularRateSensorHandler(PinState pin_event)
 {
+#ifdef COUNT_TO_TIMER
+	NVIC_DisableIRQ(TIM2_IRQn);
+	GlobalRateSensor.leftRPM = GlobalRateSensor.leftRPM +1;
+	NVIC_EnableIRQ(TIM2_IRQn);
+#else
+
 	static uint8_t count=0;
 	static uint32_t DWT_Count = 0;
 
@@ -155,6 +183,7 @@ void LeftAngularRateSensorHandler(PinState pin_event)
 		//GlobalData.leftRPM = (time *840) / 72000000;
 		//count = 0;
 	}
+	#endif
 }
 
 
@@ -253,8 +282,6 @@ void uartWrite(uint8_t comand,DataStruct *data)
 		}
 	}
 
-
-
 }
 
 
@@ -300,9 +327,42 @@ void TIM2_IRQHandler(void)
 {
 	TIM2->SR &= ~TIM_SR_UIF; // ���������� ����������
 
+	static uint8_t tt=0;
+	if(tt )
+	{
+		GPIOC->BSRR=GPIO_BSRR_BR13;
+		tt=0;
+	}
+	else
+	{	GPIOC->BSRR=GPIO_BSRR_BS13;
+		tt++;
+	}
+
+
 
 	if(GlobalState == StateRUN)
+	{
+		#ifdef COUNT_TO_TIMER
+		float t=GlobalRateSensor.leftRPM;
+		t/=8.4;
+		t*=60;
+		GlobalData.leftRPM =t;
+
+		t=GlobalRateSensor.rightRPM;
+		t/=8.4;
+		t*=60;
+		GlobalData.rightRPM =t;
+
+
+
+		//GlobalData.leftRPM = ((GlobalRateSensor.leftRPM*/84 ;
+		//GlobalData.rightRPM = ((GlobalRateSensor.rightRPM*60)*10)/84 ;
+
+		GlobalRateSensor.leftRPM = 0;
+		GlobalRateSensor.rightRPM = 0;
+		#endif
 		uartWrite(8,&GlobalData);
+	}
 }
 
 

@@ -38,7 +38,7 @@ Window {
 
 
     onIsRunChanged: {
-        controller.isRun =isRun
+        controller.isRun = isRun
       // root.visible = false;
       // _comDialog.visible = true
     }

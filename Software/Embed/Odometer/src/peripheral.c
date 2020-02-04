@@ -35,7 +35,7 @@ void InitExternalInterrupt(void)
 	//Enable interrupt
     EXTI->IMR |= EXTI_IMR_MR15 | EXTI_IMR_MR12 | EXTI_IMR_MR11;
 
-
+    NVIC_SetPriority(EXTI15_10_IRQn,6);
 	NVIC_EnableIRQ (EXTI15_10_IRQn);
 
 }
@@ -48,7 +48,7 @@ void InitTimer(void)
 
 
 	TIM2->PSC = (72000000 / 2) / 1000 - 1;
-	TIM2->ARR = 200 - 1;
+	TIM2->ARR = 150 - 1;
 	TIM2->DIER |= TIM_DIER_UIE;
 	TIM2->CR1 = TIM_CR1_ARPE | TIM_CR1_CEN;
 
@@ -58,9 +58,9 @@ void InitTimer(void)
 
 void InitDWT(void)
 {
-	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // Включаем TRACE
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TRACE
 	SCB_DEMCR |= 0x01000000;
-	DWT_CONTROL|= 1; // включаем счётчик
+	DWT_CONTROL|= 1; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 }
 
