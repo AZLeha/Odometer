@@ -25,8 +25,8 @@ Window {
     property int leftRPM:       controller.leftRPM
     property int rightRPM:      controller.rightRPM
     property int diferentRPM:   controller.diferentRPM
-    property var leftDyno:      0
-    property var rightDyno:     0
+    property real leftDyno:     controller.leftDyno / 100
+    property real rightDyno:    controller.rightDyno / 100
 
     property int defaultOffSet: 0
     property bool defaultRun:   false
@@ -151,7 +151,7 @@ Window {
             id: _leftDynamometer
             size: 150
             value: leftDyno
-
+            stepSize: 0.01
             anchors.top: _diferentTachometer.bottom
             anchors.right: _diferentTachometer.left
             anchors.rightMargin: 75
@@ -162,7 +162,7 @@ Window {
             id: _rightDynamometer
             size: 150
             value: rightDyno
-
+            stepSize: 0.01
             anchors.top: _diferentTachometer.bottom
             //anchors.topMargin: 10
             anchors.left: _diferentTachometer.right

@@ -14,6 +14,8 @@ class Controller : public QObject
 
     Q_PROPERTY(int leftRPM READ leftRPM WRITE setLeftRPM NOTIFY leftRPMChanged)
     Q_PROPERTY(int rightRPM READ rightRPM WRITE setRightRPM NOTIFY rightRPMChanged)
+    Q_PROPERTY(int leftDyno READ leftDyno WRITE setLeftDyno NOTIFY leftDynoChanged)
+    Q_PROPERTY(int rightDyno READ rightDyno WRITE setRightDyno NOTIFY rightDynoChanged)
     Q_PROPERTY(int diferentRPM READ diferentRPM WRITE setDiferentRPM NOTIFY diferentRPMChanged)
     Q_PROPERTY(bool isRun READ isRun WRITE setIsRun NOTIFY isRunChanged)
 
@@ -42,6 +44,16 @@ public:
     bool disconnectPort();
 
 
+    int leftDyno() const
+    {
+        return m_leftDyno;
+    }
+
+    int rightDyno() const
+    {
+        return m_rightDyno;
+    }
+
 private:
     QSerialPort *m_port;
     CommandProcessor m_commandProcessor;
@@ -54,9 +66,13 @@ private:
         int16_t leftRPM;
         int16_t rightRPM;
 
-        int16_t leftDyno;
-        int16_t rightDyno;
+        int32_t leftDyno;
+        int32_t rightDyno;
     };
+    int m_leftDyno;
+
+    int m_rightDyno;
+
 protected:
     void commnadRyader(CommandObject data);
     void dataHandler(const OdometerData &data);
@@ -67,6 +83,24 @@ public slots:
     void setDiferentRPM(int diferentRPM);
     void setIsRun(bool isRun);
 
+    void setLeftDyno(int leftDyno)
+    {
+        if (m_leftDyno == leftDyno)
+            return;
+
+        m_leftDyno = leftDyno;
+        emit leftDynoChanged(m_leftDyno);
+    }
+
+    void setRightDyno(int rightDyno)
+    {
+        if (m_rightDyno == rightDyno)
+            return;
+
+        m_rightDyno = rightDyno;
+        emit rightDynoChanged(m_rightDyno);
+    }
+
 private slots:
     void receivingData();
 
@@ -76,6 +110,8 @@ signals:
     void rightRPMChanged(int rightRPM);
     void diferentRPMChanged(int diferentRPM);
     void isRunChanged(bool isRun);
+    void leftDynoChanged(int leftDyno);
+    void rightDynoChanged(int rightDyno);
 };
 
 #endif // CONTROLLER_H

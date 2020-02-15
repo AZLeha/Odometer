@@ -80,6 +80,8 @@ bool Controller::disconnectPort()
     return m_port->isOpen();
 }
 
+#include <QByteArray>
+#include <QDataStream>
 void Controller::commnadRyader(CommandObject data)
 {
 
@@ -99,8 +101,14 @@ void Controller::commnadRyader(CommandObject data)
                 odometerData.leftRPM = *(reinterpret_cast<int16_t*>( data.data.data()));
                 odometerData.rightRPM = *(reinterpret_cast<int16_t*>(data.data.data()+2));
 
-                odometerData.leftDyno = *(reinterpret_cast<int16_t*>( data.data.data()+4));
-                odometerData.rightDyno = *(reinterpret_cast<int16_t*>( data.data.data()+6));
+                odometerData.leftDyno = *(reinterpret_cast<int32_t*>( data.data.data()+4));
+                odometerData.rightDyno = *(reinterpret_cast<int32_t*>( data.data.data()+8));
+                /*QDataStream strems(data.data);
+
+                strems >> odometerData.leftRPM;
+                strems >> odometerData.rightRPM;
+                strems >> odometerData.leftDyno;
+                strems >> odometerData.rightDyno;*/
 
                 dataHandler(odometerData);
 
@@ -113,6 +121,8 @@ void Controller::dataHandler(const Controller::OdometerData &data)
 {
     setLeftRPM(data.leftRPM);
     setRightRPM(data.rightRPM);
+    setLeftDyno(data.leftDyno);
+    setRightDyno(data.rightDyno);
 
     m_stream << QString::number(QDateTime::currentDateTime().time().hour()) +":" + \
                 QString::number(QDateTime::currentDateTime().time().minute()) + ":" + \
@@ -125,9 +135,8 @@ void Controller::dataHandler(const Controller::OdometerData &data)
 
 
 
-    //! \todo СДЕЛАТЬ ЧТЕНИЕ С ДИНАМОМИТРА
-  //  setLeft(data.leftRPM);
-  //  setLeftRPM(data.leftRPM);
+
+
 }
 
 
@@ -181,14 +190,13 @@ void Controller::setIsRun(bool isRun)
         m_stream.setDevice(&m_file);
 
         m_stream << "hour:minute:second:msec#leftRPM#rightRPM#leftDyno#rightDyno \n";
-
     }
     else {
         data = STOP_CMD;
         m_file.close();
     }
 
-    m_port->write( reinterpret_cast<char*>(&data),1);
+    m_port->write(reinterpret_cast<char*>(&data),1);
 
     qDebug()<<"IS Run";
     emit isRunChanged(m_isRun);

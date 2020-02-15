@@ -2,6 +2,8 @@
 #include "LCD.h"
 #include "UART.h"
 #include "peripheral.h"
+#include "dynamometers.h"
+
 #define COUNT_TO_TIMER
 
 #define  PacketHeader_default {.array={0xAA,0x3C,0x55,0}}
@@ -30,15 +32,17 @@ typedef enum
 	StateSTOP
 } State;
 
+
+#pragma pack(push, 1)
 typedef struct
 {
 	int16_t leftRPM;
 	int16_t rightRPM;
 
-	int16_t leftDyno;
-	int16_t rightDyno;
+	int32_t leftDyno;
+	int32_t rightDyno;
 } DataStruct;
-
+#pragma pack(pop)
 
 typedef struct
 {
@@ -50,9 +54,9 @@ State GlobalState  = StateSTOP;
 DataStruct GlobalData;
 RPM GlobalRateSensor;
 
-//���������� �����
+
 void StartButtonHandler(PinState pin_event);
-//����������� ������ ��������
+
 void RightAngularRateSensorHandler(PinState pin_event);
 void LeftAngularRateSensorHandler(PinState pin_event);
 
@@ -79,6 +83,7 @@ int main(void)
 	GlobalRateSensor.rightRPM = 0 ;
 	LCD_Init();
 	UART_Init();
+	Dynamometers_init();
 	InitExternalInterrupt();
 	InitTimer();
 
@@ -115,6 +120,8 @@ void StartButtonHandler(PinState pin_event)
 
 	}
 }
+
+
 
 
 void RightAngularRateSensorHandler(PinState pin_event)
@@ -199,7 +206,6 @@ void StateMachine(State state, DataStruct *data)
 
 	if(state==curentState)
 	{
-		//���� ������� STOP � �� �������� ������� ��� ��� ������������ �� ���������
 		if(curentState==StateSTOP) return;
 	}
 	else
@@ -278,7 +284,7 @@ void uartWrite(uint8_t comand,DataStruct *data)
 	{
 		for(int i = 0; i < 0xfffff; i++)
 		{
-			if(TransmitDataViaDMA(data, 16)) break;
+			if(TransmitDataViaDMA(data, sizeof(DataStruct))) break;
 		}
 	}
 
@@ -294,6 +300,8 @@ void USART1_IRQHandler(void)
 	if(USART1->DR == 0x80) GlobalState = StateSTOP;
 	if(USART1->DR == 0x81) GlobalState = StateRUN;
 }
+
+
 
 
 
@@ -325,6 +333,8 @@ void EXTI15_10_IRQHandler()
 
 void TIM2_IRQHandler(void)
 {
+
+
 	TIM2->SR &= ~TIM_SR_UIF; // ���������� ����������
 
 	static uint8_t tt=0;
@@ -334,7 +344,8 @@ void TIM2_IRQHandler(void)
 		tt=0;
 	}
 	else
-	{	GPIOC->BSRR=GPIO_BSRR_BS13;
+	{
+		GPIOC->BSRR=GPIO_BSRR_BS13;
 		tt++;
 	}
 
@@ -343,6 +354,8 @@ void TIM2_IRQHandler(void)
 	if(GlobalState == StateRUN)
 	{
 		#ifdef COUNT_TO_TIMER
+
+
 		float t=GlobalRateSensor.leftRPM;
 		t/=8.4;
 		t*=60;
@@ -353,6 +366,27 @@ void TIM2_IRQHandler(void)
 		t*=60;
 		GlobalData.rightRPM =t;
 
+		static uint8_t cc=0;
+
+		if(Dynamometers_isDataReady())
+		{
+			GlobalData.rightDyno = Dynamometers_Data2();
+			GlobalData.leftDyno = Dynamometers_Data1();
+			Dynamometers_StartMeasurement();
+			cc=0;
+		}
+
+
+		if(cc>20)
+		{
+			GlobalData.rightDyno = Dynamometers_Data2();
+			GlobalData.leftDyno = Dynamometers_Data1();
+			Dynamometers_StartMeasurement();
+
+
+			cc=0;
+		}
+		cc++;
 
 
 		//GlobalData.leftRPM = ((GlobalRateSensor.leftRPM*/84 ;
@@ -361,7 +395,7 @@ void TIM2_IRQHandler(void)
 		GlobalRateSensor.leftRPM = 0;
 		GlobalRateSensor.rightRPM = 0;
 		#endif
-		uartWrite(8,&GlobalData);
+		uartWrite(sizeof(DataStruct),&GlobalData);
 	}
 }
 
