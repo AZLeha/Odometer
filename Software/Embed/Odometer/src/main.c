@@ -372,6 +372,8 @@ void TIM2_IRQHandler(void)
 		{
 			GlobalData.rightDyno = Dynamometers_Data2();
 			GlobalData.leftDyno = Dynamometers_Data1();
+
+
 			Dynamometers_StartMeasurement();
 			cc=0;
 		}
@@ -381,6 +383,7 @@ void TIM2_IRQHandler(void)
 		{
 			GlobalData.rightDyno = Dynamometers_Data2();
 			GlobalData.leftDyno = Dynamometers_Data1();
+
 			Dynamometers_StartMeasurement();
 
 

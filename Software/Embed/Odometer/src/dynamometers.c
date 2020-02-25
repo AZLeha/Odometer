@@ -144,7 +144,8 @@ void USART2_IRQHandler(void)
 		localPtr[0] = localData[1];
 		localPtr[1] = localData[2];
 		localPtr[2] = localData[3];
-		localPtr[2] = 0;
+		if(localPtr[2] & (1<<7)) localPtr[3] = 0xff;
+		else localPtr[3] = 0;
 		_isDataReadyChanel1 = true;
 		count = 0;
 	}
@@ -168,7 +169,10 @@ void USART3_IRQHandler(void)
 		localPtr[0] = localData[1];
 		localPtr[1] = localData[2];
 		localPtr[2] = localData[3];
-		localPtr[2] = 0;
+
+		if(localPtr[2] & (1<<7)) localPtr[3] = 0xff;
+		else localPtr[3] = 0;
+
 		_isDataReadyChanel2 = true;
 		count = 0;
 	}
