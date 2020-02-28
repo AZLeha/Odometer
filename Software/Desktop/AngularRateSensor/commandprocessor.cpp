@@ -13,8 +13,6 @@ bool CommandProcessor::FindeComand(const QByteArray &data)
     for (QByteArray::const_iterator i = data.begin(); i != data.end(); ++i)
         m_aCommandReaderBuffer.enqueue(uint8_t(*i));
 
-
-
     while(!m_aCommandReaderBuffer.isEmpty())
     {
         switch (m_stusFindeComand)
@@ -46,7 +44,6 @@ bool CommandProcessor::FindeComand(const QByteArray &data)
                      m_DataCounter = m_lastCommand.comdan;
                      m_lastCommand.data.clear();
                 }
-
 
             } break;
 

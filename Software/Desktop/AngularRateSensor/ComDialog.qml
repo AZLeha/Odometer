@@ -16,10 +16,15 @@ Dialog {
         id: setings
         property int setingsBaudRate : 11
         property string setingsFolderPath: shortcuts.home
+        property real setingsWheelRadius : 0.285
+        property real setingsShaftRadius : 0.161
     }
     property string currentPort: _port.currentText
     property int currentBaudRate: _baudRate.currentText
     property string folderPath: _FileDialog.folder
+
+    property real wheelRadius: setings.setingsWheelRadius
+    property real shaftRadius: setings.setingsShaftRadius
 
     property var listCom: "None"
 
@@ -72,6 +77,41 @@ Dialog {
                 text: qsTr("file")
                 onClicked: _FileDialog.visible = true;
             }
+        }
+
+        Row
+        {
+
+            spacing: 5
+            Column{
+                Text {
+                    id: _radiusWheel
+                    text: qsTr("Wheel Radius")
+
+                }
+
+                TextField {
+                    id: textFieldd
+                    text: setings.setingsWheelRadius
+                    onTextChanged: setings.setingsWheelRadius = text
+                }
+
+            }
+
+            Column{
+                Text {
+                    id: _radiusShaft
+                    text: qsTr("Radius of the shaft")
+                }
+
+                TextField {
+                    id: textFieldd1
+                    text: setings.setingsShaftRadius
+                    onTextChanged: setings.setingsShaftRadius = text
+                }
+
+            }
+
         }
     }
 
