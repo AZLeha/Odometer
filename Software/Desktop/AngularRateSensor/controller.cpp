@@ -80,6 +80,26 @@ bool Controller::disconnectPort()
     return m_port->isOpen();
 }
 
+double Controller::windowFilter(double data)
+{
+#define filterSize 1
+    static double array[filterSize]= {0};
+    static int curentIndex = 0;
+
+    array[curentIndex++] = data;
+
+    curentIndex %=filterSize;
+
+    double value=0;
+
+    for(int i = 0; i<filterSize;i++)
+    {
+        value += array[i];
+    }
+
+    return value/filterSize;
+}
+
 #include <QByteArray>
 #include <QDataStream>
 void Controller::commnadRyader(CommandObject data)
@@ -204,7 +224,7 @@ void Controller::setIsRun(bool isRun)
 
 void Controller::receivingData()
 {
-    qDebug()<<"Data is Read";
+    //qDebug()<<"Data is Read";
     if(m_commandProcessor.FindeComand(m_port->readAll()))
         commnadRyader(m_commandProcessor.GetLastComand());
 

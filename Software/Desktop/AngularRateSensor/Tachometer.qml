@@ -7,7 +7,7 @@ CircularGauge
 {
     id: root
     property int size: 250
-    property int gaugeStepSize: 50
+    property double gaugeStepSize: 50
     width: size
     height: size
 

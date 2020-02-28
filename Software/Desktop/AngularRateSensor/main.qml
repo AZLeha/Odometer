@@ -25,8 +25,8 @@ Window {
     property int leftRPM:       controller.leftRPM
     property int rightRPM:      controller.rightRPM
     property int diferentRPM:   controller.diferentRPM
-    property real leftDyno:     controller.leftDyno / 100
-    property real rightDyno:    controller.rightDyno / 100
+    property real leftDyno:     controller.leftDyno
+    property real rightDyno:    controller.rightDyno
 
     property int defaultOffSet: 0
     property bool defaultRun:   false
@@ -125,8 +125,41 @@ Window {
             anchors.topMargin: 10
             maximumValue: 100
             minimumValue: -100
-            gaugeStepSize:10
-            value: root.rightRPM - ((_dial.value*0.01)*root.leftRPM)
+            gaugeStepSize: 10
+            stepSize: 1
+
+
+            property real rC: 0.285
+            property real rV: 0.161
+            property real delta: rC*(_dial.value*0.01)
+
+            onDeltaChanged: console.log("Delta " +delta)
+            onValueChanged: {
+               // console.log("left " + (root.leftRPM * (rC+delta)))
+
+                //console.log("Right " +root.rightRPM*rV)
+
+                console.log("Right " +value)
+            }
+
+          //  property var RC:     0.278
+           // value: root.rightRPM - ((_dial.value*0.01)*root.leftRPM)
+
+
+          //  property real curentVlue: ((root.leftRPM * (rC+delta)) / (root.rightRPM*rV)) -1
+
+            property real curentVlue: ((root.rightRPM*rV - root.leftRPM * (rC+delta) ) / (root.rightRPM*rV))
+
+            onCurentVlueChanged:
+            {
+                value = controller.windowFilter(curentVlue)*100;
+            }
+
+
+            //value:
+
+
+            //   value:  (root.rightRPM * (rC+(rC*((_dial.value)*0.01))))/(root.leftRPM*rV) *100
 
         }
 
@@ -151,10 +184,15 @@ Window {
             id: _leftDynamometer
             size: 150
             value: leftDyno
-            stepSize: 0.01
+
             anchors.top: _diferentTachometer.bottom
             anchors.right: _diferentTachometer.left
             anchors.rightMargin: 75
+
+
+            maximumValue: 5000
+            minimumValue: -5000
+            gaugeStepSize:1000
 
         }
         Tachometer
@@ -162,11 +200,14 @@ Window {
             id: _rightDynamometer
             size: 150
             value: rightDyno
-            stepSize: 0.01
+
             anchors.top: _diferentTachometer.bottom
             //anchors.topMargin: 10
             anchors.left: _diferentTachometer.right
             anchors.leftMargin: 75
+            gaugeStepSize:1000
+            maximumValue: 10000
+            minimumValue: -10000
 
         }
 

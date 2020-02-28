@@ -43,7 +43,7 @@ public:
     Q_INVOKABLE bool connectToPort(const QString &portName, const qint32 & baudRate = 115200, const QString filePath = "./");
     bool disconnectPort();
 
-
+    Q_INVOKABLE double windowFilter(double data);
     int leftDyno() const
     {
         return m_leftDyno;
