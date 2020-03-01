@@ -246,7 +246,7 @@ void Controller::setIsRun(bool isRun)
 
     if (m_isRun) {
         data = RUN_CMD;
-        m_file.setFileName( m_folderPath.split("file://").at(1)+"/log"+ \
+        m_file.setFileName( m_folderPath.split("file:///").at(1)+"/log"+ \
                             QString::number(QDateTime::currentDateTime().time().hour())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().minute())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().second()) + ".txt"

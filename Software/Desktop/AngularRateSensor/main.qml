@@ -58,8 +58,8 @@ Window {
 
 
 
-            controller.setShaftRadius ( _comDialog.wheelRadius)
-            controller.setWheelRadius (_comDialog.shaftRadius)
+            controller.setShaftRadius ( _comDialog.shaftRadius)
+            controller.setWheelRadius (_comDialog.wheelRadius)
 
             if(!controller.connectToPort(_comDialog.currentPort,_comDialog.currentBaudRate, _comDialog.folderPath))
             {
