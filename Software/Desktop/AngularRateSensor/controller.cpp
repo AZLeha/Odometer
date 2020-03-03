@@ -356,4 +356,3 @@ void Controller::receivingData()
         commnadRyader(m_commandProcessor.GetLastComand());
 
 }
-
