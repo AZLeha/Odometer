@@ -66,12 +66,12 @@ bool Controller::isRun() const
     return m_isRun;
 }
 
-float Controller::wheelRadius() const
+double Controller::wheelRadius() const
 {
     return m_wheelRadius;
 }
 
-float Controller::shaftRadius() const
+double Controller::shaftRadius() const
 {
     return m_shaftRadius;
 }
@@ -146,7 +146,7 @@ int Controller::offSetDiferentRPM() const
     return m_offSetDiferentRPM;
 }
 
-
+#include <QDataStream>
 void Controller::commnadRyader(CommandObject data)
 {
     switch (data.comdan )
@@ -160,11 +160,17 @@ void Controller::commnadRyader(CommandObject data)
         {
             OdometerData odometerData{};
 
-            odometerData.leftRPM = *(reinterpret_cast<int16_t*>( data.data.data()));
+            QDataStream s(data.data);
+            s >> odometerData.leftRPM;
+            s >> odometerData.rightRPM;
+            s >> odometerData.leftDyno;
+            s >> odometerData.rightDyno;
+
+           /* odometerData.leftRPM = *(reinterpret_cast<int16_t*>( data.data.data()));
             odometerData.rightRPM = *(reinterpret_cast<int16_t*>(data.data.data()+2));
 
             odometerData.leftDyno = *(reinterpret_cast<int32_t*>( data.data.data()+4));
-            odometerData.rightDyno = *(reinterpret_cast<int32_t*>( data.data.data()+8));
+            odometerData.rightDyno = *(reinterpret_cast<int32_t*>( data.data.data()+8));*/
 
 
 
@@ -201,8 +207,22 @@ void Controller::dataHandler(const Controller::OdometerData &data)
 int Controller::calculateGlide(double mainRadius, int mainRPM, double secondaryRadius, int secondaryRPM, int ofset)
 {
     // property real curentVlue: ((root.rightRPM*rV - root.leftRPM * (rC+delta) ) / (root.rightRPM*rV))
+
+
     double delta = mainRadius * (0.01 * ofset);
+
+
+
+
     double result =  ((secondaryRadius * secondaryRPM) - ((mainRadius + delta) * mainRPM)) / (secondaryRadius * secondaryRPM);
+
+    qDebug()<<"Ofset = " << ofset
+            <<"mainRadius = " << mainRadius
+            <<"mainRPM = " << mainRPM
+            <<"secondaryRadius = " << secondaryRadius
+            <<"secondaryRPM = " << secondaryRPM
+            <<"delta = " << delta
+            <<"result = " << result;
 
     return static_cast<int>(result * 100);
 }
@@ -246,11 +266,24 @@ void Controller::setIsRun(bool isRun)
 
     if (m_isRun) {
         data = RUN_CMD;
+
+    #if defined(Q_OS_LINUX)
         m_file.setFileName( m_folderPath.split("file://").at(1)+"/log"+ \
                             QString::number(QDateTime::currentDateTime().time().hour())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().minute())+"_" + \
                             QString::number(QDateTime::currentDateTime().time().second()) + ".txt"
                             );
+    #elif defined(Q_OS_WIN)
+        m_file.setFileName( m_folderPath.split("file:///").at(1)+"/log"+ \
+                            QString::number(QDateTime::currentDateTime().time().hour())+"_" + \
+                            QString::number(QDateTime::currentDateTime().time().minute())+"_" + \
+                            QString::number(QDateTime::currentDateTime().time().second()) + ".txt"
+                            );
+    #endif
+
+
+
+
 
         qDebug() << m_file.fileName()<< m_file.open(QIODevice::WriteOnly);
 

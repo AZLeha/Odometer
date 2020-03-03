@@ -32,8 +32,8 @@ class Controller : public QObject
 
     Q_PROPERTY(bool isRun READ isRun WRITE setIsRun NOTIFY isRunChanged)
 
-    Q_PROPERTY(float wheelRadius READ wheelRadius WRITE setWheelRadius NOTIFY wheelRadiusChanged)
-    Q_PROPERTY(float shaftRadius READ shaftRadius WRITE setShaftRadius NOTIFY shaftRadiusChanged)
+    Q_PROPERTY(double wheelRadius READ wheelRadius WRITE setWheelRadius NOTIFY wheelRadiusChanged)
+    Q_PROPERTY(double shaftRadius READ shaftRadius WRITE setShaftRadius NOTIFY shaftRadiusChanged)
 public:
     explicit Controller(QObject *parent = nullptr);
     ~Controller();
@@ -55,8 +55,8 @@ public:
 
     bool isRun() const;
 
-    float wheelRadius() const;
-    float shaftRadius() const;
+    double wheelRadius() const;
+    double shaftRadius() const;
 
 private:
     struct OdometerData{
@@ -88,8 +88,8 @@ private:
 
     bool m_isRun;
 
-    float m_wheelRadius;
-    float m_shaftRadius;
+    double m_wheelRadius;
+    double m_shaftRadius;
 
 protected:
     void commnadRyader(CommandObject data);
@@ -113,7 +113,7 @@ private slots:
 signals:
     void leftRPMChanged(int leftRPM);
     void rightRPMChanged(int rightRPM);
-    void diferentRPMChanged(int diferentRPM);
+    void diferentRPMChanged(double diferentRPM);
     void isRunChanged(bool isRun);
     void leftDynoChanged(int leftDyno);
     void rightDynoChanged(int rightDyno);

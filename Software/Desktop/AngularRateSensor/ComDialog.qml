@@ -15,7 +15,7 @@ Dialog {
     {
         id: setings
         property int setingsBaudRate : 11
-        property string setingsFolderPath: shortcuts.home
+        property alias setingsFolderPath: _FileDialog.folder // shortcuts.home
         property real setingsWheelRadius : 0.285
         property real setingsShaftRadius : 0.161
     }
@@ -118,23 +118,13 @@ Dialog {
     FileDialog {
         id: _FileDialog
         title: "Please choose a file"
-        folder: setings.setingsFolderPath
+        //folder: setings.setingsFolderPath
         selectFolder: true
-        onFolderChanged: setings.setingsFolderPath = folder
+
         onAccepted: {
             textField.focus = true;
             textField.text = _FileDialog.folder
         }
     }
-
-
-/*
-    Button {
-        id: button
-        x: 211
-        y: -457
-        text: qsTr("Button")
-    }*/
-
 
 }
