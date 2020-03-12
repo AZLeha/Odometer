@@ -6,16 +6,14 @@
 #include <QJsonArray>
 #include <QFile>
 #include <QTextStream>
-
+#include <QTimer>
 
 #include "hardware.h"
 #include "model.h"
 
-#define DEBUG
 
-#ifdef DEBUG
-#include <QTimer>
-#endif
+
+
 
 
 
@@ -63,6 +61,9 @@ private:
 
     Hardware *HardwareInstance = nullptr;
 
+    QTimer *timer;
+    MainModel model;
+
 signals:
     void readyRead(MainModel data);
     void setWheelRadiusOffSet(qint8 offset);
@@ -74,16 +75,8 @@ private slots:
     void sl_receivingComand(Hardware_COMAND comand);
 
 
+    void TimerHandler();
 
-#ifdef DEBUG
-private:
-    QTimer *timer;
-    MainModel model;
-
-
-private slots:
-    void debugSequence();
-#endif
 
 };
 

@@ -15,12 +15,12 @@ Controller::Controller(QObject *parent) : QObject(parent)
 
 
 
-#ifdef DEBUG
+
 
     timer = new QTimer(this);
-    connect(timer, &QTimer::timeout, this, &Controller::debugSequence);
+    connect(timer, &QTimer::timeout, this, &Controller::TimerHandler);
     timer->start(300);
-#endif
+
 
 }
 
@@ -157,20 +157,8 @@ void Controller::sl_receivingData(MainModel data)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-#ifdef DEBUG
-void Controller::debugSequence()
+void Controller::TimerHandler()
 {
     emit readyRead(model);
 }
-#endif
+
