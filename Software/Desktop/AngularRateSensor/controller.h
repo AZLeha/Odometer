@@ -3,132 +3,90 @@
 #define CONTROLLER_H
 
 #include <QObject>
-#include <QSerialPort>
 #include <QJsonArray>
-#include <commandprocessor.h>
 #include <QFile>
 #include <QTextStream>
 
 
-//#define DEBUG
+#include "hardware.h"
+#include "model.h"
+
+#define DEBUG
 
 #ifdef DEBUG
 #include <QTimer>
 #endif
 
 
+
+
+
 class Controller : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(int leftRPM READ leftRPM WRITE setLeftRPM NOTIFY leftRPMChanged)
-    Q_PROPERTY(int rightRPM READ rightRPM WRITE setRightRPM NOTIFY rightRPMChanged)
-
-    Q_PROPERTY(int leftDyno READ leftDyno WRITE setLeftDyno NOTIFY leftDynoChanged)
-    Q_PROPERTY(int rightDyno READ rightDyno WRITE setRightDyno NOTIFY rightDynoChanged)
-
-    Q_PROPERTY(double diferentRPM READ diferentRPM WRITE setDiferentRPM NOTIFY diferentRPMChanged)
-    Q_PROPERTY(int offSetDiferentRPM READ offSetDiferentRPM WRITE setOffSetDiferentRPM NOTIFY offSetDiferentRPMChanged)
-
     Q_PROPERTY(bool isRun READ isRun WRITE setIsRun NOTIFY isRunChanged)
 
-    Q_PROPERTY(double wheelRadius READ wheelRadius WRITE setWheelRadius NOTIFY wheelRadiusChanged)
-    Q_PROPERTY(double shaftRadius READ shaftRadius WRITE setShaftRadius NOTIFY shaftRadiusChanged)
 public:
+
     explicit Controller(QObject *parent = nullptr);
     ~Controller();
 
-    Q_INVOKABLE QJsonArray getListPorts();
-    Q_INVOKABLE bool connectToPort(const QString &portName, const qint32 & baudRate = 115200, const QString filePath = "./");
-    Q_INVOKABLE bool disconnectPort();
-    Q_INVOKABLE double windowFilter(double data);
+    Q_INVOKABLE QJsonArray portInfo();
+    Q_INVOKABLE bool run(const QString &portName, const qint32 & baudRate = 115200, const QString filePath = "./");
 
+    //! \property [in]  shaftRadius Радиус привода
+    //! \property [in]  wheelRadius Радиус Колеса
+    Q_INVOKABLE void driveTransmissionInfo(double shaftRadius, double wheelRadius);
 
-    int leftRPM() const;
-    int rightRPM() const;
-
-    int leftDyno() const;
-    int rightDyno() const;
-
-    double diferentRPM() const;
-    int offSetDiferentRPM() const;
 
     bool isRun() const;
 
-    double wheelRadius() const;
-    double shaftRadius() const;
+public slots:
+    void setIsRun(bool isRun);
+
+protected:
+    bool disconnectPort();
+    bool connectPort(const QString &portName, const qint32 & baudRate = 115200);
 
 private:
-    struct OdometerData{
-        int16_t leftRPM;
-        int16_t rightRPM;
 
-        int32_t leftDyno;
-        int32_t rightDyno;
-        int diferentRPM;
-    };
-
-
-    QSerialPort *m_port;
-    CommandProcessor m_commandProcessor;
+    double m_shaftRadius;
+    double m_wheelRadius;
+    qint8 m_WheelRadiusOffSet;
 
     QFile m_file;
     QTextStream m_stream;
     QString m_folderPath;
 
+    bool m_isRun = false;
 
-    int m_leftDyno {0};
-    int m_rightDyno {0};
-
-    int m_leftRPM {0};
-    int m_rightRPM {0};
-
-    double m_diferentRPM {0};
-    int m_offSetDiferentRPM {0};
-
-    bool m_isRun;
-
-    double m_wheelRadius;
-    double m_shaftRadius;
-
-protected:
-    void commnadRyader(CommandObject data);
-    void dataHandler(const OdometerData &data);
-    int calculateGlide(double mainRadius, int mainRPM, double secondaryRadius, int secondaryRPM, int ofset);
-public slots:
-    void setLeftRPM(int leftRPM);
-    void setRightRPM(int rightRPM);
-    void setDiferentRPM(double diferentRPM);
-    void setIsRun(bool isRun);
-    void setLeftDyno(int leftDyno);
-    void setRightDyno(int rightDyno);
-    void setOffSetDiferentRPM(int offSetDiferentRPM);
-    void setWheelRadius(double wheelRadius);
-    void setShaftRadius(double shaftRadius);
-
-private slots:
-    void receivingData();
-
+    Hardware *HardwareInstance = nullptr;
 
 signals:
-    void leftRPMChanged(int leftRPM);
-    void rightRPMChanged(int rightRPM);
-    void diferentRPMChanged(double diferentRPM);
+    void readyRead(MainModel data);
+    void setWheelRadiusOffSet(qint8 offset);
+
     void isRunChanged(bool isRun);
-    void leftDynoChanged(int leftDyno);
-    void rightDynoChanged(int rightDyno);
-    void offSetDiferentRPMChanged(int offSetDiferentRPM);
-    void wheelRadiusChanged(double wheelRadius);
-    void shaftRadiusChanged(double shaftRadius);
+
+private slots:
+    void sl_receivingData(MainModel data);
+    void sl_receivingComand(Hardware_COMAND comand);
+
+
 
 #ifdef DEBUG
 private:
     QTimer *timer;
-public slots:
+    MainModel model;
+
+
+private slots:
     void debugSequence();
 #endif
 
-
 };
+
+
 
 #endif // CONTROLLER_H

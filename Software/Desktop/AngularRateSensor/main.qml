@@ -9,6 +9,7 @@ import custom.controller 1.0
 
 
 
+
 Window {
     id: root
 
@@ -22,30 +23,20 @@ Window {
     maximumWidth: minimumWidth
     title: qsTr("Angular rate sensor")
 
-    property int leftRPM:       controller.leftRPM
-    property int rightRPM:      controller.rightRPM
+    property alias leftRPM:     _leftTachometer.value
+    property alias rightRPM:    _rightTachometer.value
 
-    property real leftDyno:     controller.leftDyno
-    property real rightDyno:    controller.rightDyno
+    property alias leftDyno:    _leftDynamometer.value
+    property alias rightDyno:   _rightDynamometer.value
 
-    property int diferentRPM:   controller.diferentRPM
+    property alias diferentRPM: _diferentTachometer.value
 
     property alias  offSet:     _dial.value
 
-    property int defaultOffSet: 0
-    property bool defaultRun:   false
-
-    property alias  isRun:      _runButton.checked
+    onOffSetChanged: controller.setWheelRadiusOffSet(offSet)
 
 
-    //onOffSetChanged: {diferentRPM = offSet }
 
-
-    onIsRunChanged: {
-        controller.isRun = isRun
-      // root.visible = false;
-      // _comDialog.visible = true
-    }
     ComDialog
     {
         id: _comDialog
@@ -57,17 +48,12 @@ Window {
             root.visible = true
 
 
+            controller.driveTransmissionInfo(_comDialog.shaftRadius,_comDialog.wheelRadius)
 
-            controller.setShaftRadius ( _comDialog.shaftRadius)
-            controller.setWheelRadius (_comDialog.wheelRadius)
-
-            if(!controller.connectToPort(_comDialog.currentPort,_comDialog.currentBaudRate, _comDialog.folderPath))
+            if(!controller.run(_comDialog.currentPort,_comDialog.currentBaudRate, _comDialog.folderPath))
             {
                 messageDialog.visible = true
             }
-
-
-            //! \todo дописать поключение порта
         }
     }
 
@@ -85,18 +71,28 @@ Window {
     Controller
     {
         id: controller
-        onIsRunChanged:
+
+        onReadyRead:
         {
-            root.isRun = controller.isRun
+            root.leftRPM = data.leftRPM;
+            root.rightRPM = data.rightRPM;
+
+            root.leftDyno = data.leftDyno;
+            root.rightDyno = data.rightDyno;
+
+            root.diferentRPM = data.diferentRPM
+
         }
+
     }
+
+
 
     Component.onCompleted:
     {
-
         _comDialog.visible = true
 
-        var listPorts = controller.getListPorts();
+        var listPorts = controller.portInfo();
         _comDialog.listCom= listPorts
     }
 
@@ -230,7 +226,7 @@ Window {
             x: 15
             y: 10
             color: "#4bff00"
-            active: root.isRun
+            active: controller.isRun
         }
         //=============================================================================
 
@@ -248,7 +244,7 @@ Window {
             stepSize: 1
             maximumValue: 100
             minimumValue: -100
-            value: defaultOffSet
+            value: 0
             onValueChanged:
             {
                 controller.offSetDiferentRPM = value
@@ -256,7 +252,7 @@ Window {
 
             Text {
                 id: element
-                x: 38
+                x: _dial.width/2 - element.width/2
                 y: 49
                 text: qsTr("Off set")
                 font.pixelSize: 12
@@ -278,11 +274,15 @@ Window {
             x: 363
             y: 229
             text: qsTr("")
-            checked: root.defaultRun
+            checked: controller.isRun
 
+            onClicked:
+            {
+                controller.isRun = !controller.isRun
+            }
             Text {
-                id: element1
-                x: 46
+                id: labelButton
+                x: _runButton.width/2 - labelButton.width/2
                 y: 49
                 text: qsTr("Run")
                 font.pixelSize: 12

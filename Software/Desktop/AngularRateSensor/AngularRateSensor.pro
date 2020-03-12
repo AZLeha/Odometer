@@ -16,6 +16,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         commandprocessor.cpp \
         controller.cpp \
+        hardware.cpp \
         main.cpp
 
 RESOURCES += qml.qrc
@@ -33,4 +34,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     commandprocessor.h \
-    controller.h
+    controller.h \
+    hardware.h \
+    model.h

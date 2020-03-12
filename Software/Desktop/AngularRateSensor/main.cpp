@@ -11,7 +11,13 @@ int main(int argc, char *argv[])
     app.setOrganizationName("Some Company");
     app.setOrganizationDomain("somecompany.com");
     app.setApplicationName("Amazing Application");
+
     qmlRegisterType<Controller>("custom.controller", 1, 0, "Controller");
+   // qmlRegisterType<MainModel>("custom.controller", 1, 0, "MainModel");
+
+    qRegisterMetaType<MainModel>("MainModel");
+
+
 
     QQmlApplicationEngine engine;
     const QUrl url(QStringLiteral("qrc:///main.qml"));
