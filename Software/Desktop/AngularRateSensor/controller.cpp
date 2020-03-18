@@ -46,15 +46,23 @@ bool Controller::run(const QString &portName, const qint32 &baudRate, const QStr
 {
     if(HardwareInstance) return false;
 
+
     HardwareInstance = new Hardware(m_wheelRadius, m_shaftRadius,this);
+
     m_folderPath = filePath;
 
     if(!HardwareInstance->HardwareConnect(portName,baudRate)) return false;
+
+    hardThread =new QThread(this);
+
+    HardwareInstance->moveToThread(hardThread);
+
 
     connect(HardwareInstance,&Hardware::si_DataIsReady, this, &Controller::sl_receivingData);
     connect(HardwareInstance,&Hardware::si_ComandIsReady, this, &Controller::sl_receivingComand);
     connect(this, &Controller::setWheelRadiusOffSet, HardwareInstance, &Hardware::sl_setOfset);
 
+    hardThread->start();
     return true;
 }
 

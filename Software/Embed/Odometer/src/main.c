@@ -379,7 +379,7 @@ void TIM2_IRQHandler(void)
 		}
 
 
-		if(cc>20)
+		if(cc>3)
 		{
 			GlobalData.rightDyno = Dynamometers_Data2();
 			GlobalData.leftDyno = Dynamometers_Data1();

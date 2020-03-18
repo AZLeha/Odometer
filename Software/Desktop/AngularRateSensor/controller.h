@@ -12,7 +12,7 @@
 #include "model.h"
 
 
-
+#include <QThread>
 
 
 
@@ -63,6 +63,8 @@ private:
 
     QTimer *timer;
     MainModel model;
+
+    QThread *hardThread;
 
 signals:
     void readyRead(MainModel data);
