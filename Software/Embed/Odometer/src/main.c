@@ -4,7 +4,7 @@
 #include "peripheral.h"
 #include "dynamometers.h"
 
-#define COUNT_TO_TIMER
+
 
 #define  PacketHeader_default {.array={0xAA,0x3C,0x55,0}}
 typedef union {
@@ -46,8 +46,8 @@ typedef struct
 
 typedef struct
 {
-	int64_t leftRPM;
-	int64_t rightRPM;
+	uint32_t leftRPM;
+	uint32_t rightRPM;
 } RPM;
 
 State GlobalState  = StateSTOP;
@@ -88,15 +88,9 @@ int main(void)
 	InitTimer();
 
 
-	#ifdef COUNT_TO_TIMER
-	#else
 	InitDWT();
-	#endif
 
 
-
-	/*DWT_CYCCNT  = 0;
-	uint32_t x = DWT_CYCCNT;*/
 	GlobalData.leftDyno = 0;
 	GlobalData.rightDyno = 0;
 	GlobalData.leftRPM = 0;
@@ -115,10 +109,6 @@ void StartButtonHandler(PinState pin_event)
 	{
 		GlobalState = !GlobalState;
 	}
-	else
-	{
-
-	}
 }
 
 
@@ -126,71 +116,75 @@ void StartButtonHandler(PinState pin_event)
 
 void RightAngularRateSensorHandler(PinState pin_event)
 {
-#ifdef COUNT_TO_TIMER
-
-	NVIC_DisableIRQ(TIM2_IRQn);
-	GlobalRateSensor.rightRPM = GlobalRateSensor.rightRPM +1;
-	NVIC_EnableIRQ(TIM2_IRQn);
-#else
-	static uint8_t count=0;
 	static uint32_t DWT_Count = 0;
+	static uint8_t localState = 0;
+	NVIC_DisableIRQ(TIM2_IRQn);
 
-	count++;
-
-
-	if(count == 8)
+	if(pin_event == PIN_UP)
 	{
-		uint32_t time = DWT_Count;
 
-		DWT_Count = DWT_CYCCNT;
+		if(!localState)
+		{
+			DWT_Count = DWT_CYCCNT;
+			localState++;
+		}
+		else
+		{
+			if (GlobalRateSensor.rightRPM== 0) //Для гашения выбросов отризаем 1 измерение если оно попало вромежут отсчёта таймера
+			{									// иначе могут быть выбросы после 0
+				GlobalRateSensor.rightRPM = 1;
+				localState = 0;
+				return;
+			}
 
-		time = DWT_Count - time;
-								//(time * 14 *60 )/f_clc
-	   float x = time*14;
-			   x=x/72000000;
-			   x=60/x;
 
-		GlobalData.rightRPM = x;
-		count = 0;
+			uint32_t time = DWT_CYCCNT - DWT_Count;		//Определяем сколько прошло времени с пролого момента
+			if (time > GlobalRateSensor.rightRPM) GlobalRateSensor.rightRPM = time; //тут идёт выбока самого длинного промежутка тоетсь минимальных оборотов
+
+			localState = 0;
+		}
 	}
-#endif
 
+	NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 
 void LeftAngularRateSensorHandler(PinState pin_event)
 {
-#ifdef COUNT_TO_TIMER
-	NVIC_DisableIRQ(TIM2_IRQn);
-	GlobalRateSensor.leftRPM = GlobalRateSensor.leftRPM +1;
-	NVIC_EnableIRQ(TIM2_IRQn);
-#else
 
-	static uint8_t count=0;
 	static uint32_t DWT_Count = 0;
+	static uint8_t localState = 0;
+	NVIC_DisableIRQ(TIM2_IRQn);
 
-	count++;
 
 
-	if(count == 8)
+	if(pin_event == PIN_UP)
 	{
-		uint32_t time = DWT_Count;
 
-		DWT_Count = DWT_CYCCNT;
+		if(!localState)
+		{
+			DWT_Count = DWT_CYCCNT;
+			localState++;
+		}
+		else
+		{
+			if (GlobalRateSensor.leftRPM == 0) //Для гашения выбросов отризаем 1 измерение если оно попало вромежут отсчёта таймера
+			{									// иначе могут быть выбросы после 0
+				GlobalRateSensor.leftRPM = 1;
+				localState = 0;
+				return;
+			}
 
-		time = DWT_Count - time;
 
-		float x = time*14;
-					   x=x/72000000;
-					   x=60/x;
+			uint32_t time = DWT_CYCCNT - DWT_Count;		//Определяем сколько прошло времени с пролого момента
+			if (time > GlobalRateSensor.leftRPM) GlobalRateSensor.leftRPM = time; //тут идёт выбока самого длинного промежутка тоетсь минимальных оборотов
 
-		GlobalData.leftRPM = x;
-		count = 0;
-								//(time * 14 *60 )/f_clc
-		//GlobalData.leftRPM = (time *840) / 72000000;
-		//count = 0;
+			localState = 0;
+		}
 	}
-	#endif
+
+	NVIC_EnableIRQ(TIM2_IRQn);
+
 }
 
 
@@ -302,10 +296,6 @@ void USART1_IRQHandler(void)
 }
 
 
-
-
-
-
 void EXTI15_10_IRQHandler()
 {
 	//right angular rate sensor
@@ -333,51 +323,45 @@ void EXTI15_10_IRQHandler()
 
 void TIM2_IRQHandler(void)
 {
+	//rpm= (60*F_CPU)/(PD * 42)
 
-
-	TIM2->SR &= ~TIM_SR_UIF; // ���������� ����������
-
-	static uint8_t tt=0;
-	if(tt )
-	{
-		GPIOC->BSRR=GPIO_BSRR_BR13;
-		tt=0;
-	}
-	else
-	{
-		GPIOC->BSRR=GPIO_BSRR_BS13;
-		tt++;
-	}
+	TIM2->SR &= ~TIM_SR_UIF;
+	static const uint32_t divided = 72000000*60;
 
 
 
 	if(GlobalState == StateRUN)
 	{
-		#ifdef COUNT_TO_TIMER
+
+		uint32_t local_leftRPM = GlobalRateSensor.leftRPM;
+		uint32_t local_rightRPM = GlobalRateSensor.rightRPM;
+
+		GlobalRateSensor.leftRPM = GlobalRateSensor.rightRPM = 0;
+
+		if(local_leftRPM<=1) GlobalData.leftRPM = 0;
+		else
+		{
+			local_leftRPM *= 42;
+			GlobalData.leftRPM = divided / local_leftRPM;
+
+		}
+
+		if(local_rightRPM<=1) GlobalData.rightRPM = 0;
+		else
+		{
+			local_rightRPM *= 42;
+			GlobalData.rightRPM = divided / local_rightRPM;
+		}
 
 
-		float t=GlobalRateSensor.leftRPM;
-		t/=8.4;
-		t*=60;
-		GlobalData.leftRPM =t;
 
-		t=GlobalRateSensor.rightRPM;
-		t/=8.4;
-		t*=60;
-		GlobalData.rightRPM =t;
-
-		static uint8_t cc=0;
+		static int8_t cc=0;
 
 		if(Dynamometers_isDataReady())
 		{
-			GlobalData.rightDyno = Dynamometers_Data2();
-			GlobalData.leftDyno = Dynamometers_Data1();
-
-
 			Dynamometers_StartMeasurement();
-			cc=0;
+			cc=-1;
 		}
-
 
 		if(cc>3)
 		{
@@ -386,18 +370,11 @@ void TIM2_IRQHandler(void)
 
 			Dynamometers_StartMeasurement();
 
-
-			cc=0;
+			cc=-1;
 		}
 		cc++;
 
 
-		//GlobalData.leftRPM = ((GlobalRateSensor.leftRPM*/84 ;
-		//GlobalData.rightRPM = ((GlobalRateSensor.rightRPM*60)*10)/84 ;
-
-		GlobalRateSensor.leftRPM = 0;
-		GlobalRateSensor.rightRPM = 0;
-		#endif
 		uartWrite(sizeof(DataStruct),&GlobalData);
 	}
 }
